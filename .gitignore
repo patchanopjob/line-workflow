@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+reports/*.html
+!reports/.gitkeep
+.DS_Store
+pgdata/
+logs/*.log
+!logs/.gitkeep
+run-daily-report.bat
+storage/

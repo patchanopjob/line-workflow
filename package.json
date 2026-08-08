@@ -1,0 +1,27 @@
+{
+  "name": "line-workflow-workshop",
+  "version": "1.0.0-day1",
+  "private": true,
+  "description": "LINE Workflow Automation Workshop 2026 - Day 1: ขาส่งข้อความ + Rich Menu (ยังไม่มีฐานข้อมูล)",
+  "main": "dist/src/index.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/src/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^10.4.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
