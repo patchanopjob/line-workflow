@@ -214,10 +214,24 @@ export function summarizeLocally(messages: MessageRow[]): SummaryResult {
 // บันทึก/อ่านประวัติสรุป
 // ---------------------------------------------------------------------------
 
+/**
+ * บันทึกสรุปของกลุ่มในวันหนึ่ง ๆ
+ *
+ * หนึ่งกลุ่มมีสรุปได้วันละใบเดียว (บังคับด้วย unique index ใน 01_schema.sql)
+ * สั่งสรุปวันเดิมซ้ำจึงเป็นการ "ทับของเดิม" ไม่ใช่เพิ่มใบใหม่
+ * ไม่งั้นการกดปุ่มซ้ำหรือตัวตั้งเวลาทำงานซ้ำจะทำให้หน้า /summaries
+ * มีการ์ดของวันเดียวกันซ้อนกันหลายใบ
+ */
 export async function saveSummary(groupId: string, date: string, result: SummaryResult): Promise<number> {
   const rows = await query<{ id: number }>(
     `INSERT INTO group_summaries (group_id, summary_date, message_count, summary_text, topics, model)
      VALUES ($1, $2::date, $3, $4, $5::jsonb, $6)
+     ON CONFLICT (group_id, summary_date) DO UPDATE
+        SET message_count = EXCLUDED.message_count,
+            summary_text  = EXCLUDED.summary_text,
+            topics        = EXCLUDED.topics,
+            model         = EXCLUDED.model,
+            created_at    = now()
      RETURNING id`,
     [groupId, date, result.messageCount, result.summaryText, JSON.stringify(result.topics), result.model]
   )

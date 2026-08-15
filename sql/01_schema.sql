@@ -93,7 +93,20 @@ CREATE TABLE IF NOT EXISTS group_summaries (
     created_at    TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_summaries_group_date ON group_summaries (group_id, summary_date DESC);
+-- หนึ่งกลุ่มมีสรุปได้วันละหนึ่งใบเท่านั้น
+-- ถ้าไม่บังคับตรงนี้ การกดปุ่ม "สรุปด้วย AI" ซ้ำ หรือตัวตั้งเวลาทำงานซ้ำ
+-- จะได้การ์ดสรุปของวันเดียวกันซ้อนกันหลายใบในหน้า /summaries
+-- (ฝั่งโค้ดใช้ ON CONFLICT ทับของเดิม ดู src/services/summary.ts)
+
+-- เคลียร์ของซ้ำที่อาจค้างอยู่จากเวอร์ชันก่อนหน้า เก็บใบล่าสุดของแต่ละวันไว้
+DELETE FROM group_summaries a
+      USING group_summaries b
+      WHERE a.group_id = b.group_id
+        AND a.summary_date = b.summary_date
+        AND a.id < b.id;
+
+DROP INDEX IF EXISTS idx_summaries_group_date;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_summaries_group_date ON group_summaries (group_id, summary_date);
 
 -- --------------------------------------------------------------------------
 -- 6) sales_orders : ข้อมูลยอดขายจำลองของ "สยามสมาร์ทเทรด" (ใช้ใน Capstone)

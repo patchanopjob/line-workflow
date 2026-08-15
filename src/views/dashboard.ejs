@@ -3,34 +3,32 @@
 
 <!-- KPI cards -->
 <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">ข้อความที่เก็บได้ทั้งหมด</div>
-    <div class="text-2xl font-bold mt-1"><%= formatNumber(overview.totalMessages) %></div>
-    <div class="text-[11px] text-slate-400 mt-1">
-      เริ่มเก็บ <%= formatDate(overview.firstMessageAt) %>
-    </div>
+  <div class="card stat">
+    <div class="stat-label">ข้อความที่เก็บได้ทั้งหมด</div>
+    <div class="stat-value"><%= formatNumber(overview.totalMessages) %></div>
+    <div class="stat-hint">เริ่มเก็บ <%= formatDate(overview.firstMessageAt) %></div>
   </div>
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">ข้อความวันนี้</div>
-    <div class="text-2xl font-bold mt-1 text-line"><%= formatNumber(overview.todayMessages) %></div>
-    <div class="text-[11px] text-slate-400 mt-1">ล่าสุด <%= formatDateTime(overview.lastMessageAt) %></div>
+  <div class="card stat">
+    <div class="stat-label">ข้อความวันนี้</div>
+    <div class="stat-value text-line"><%= formatNumber(overview.todayMessages) %></div>
+    <div class="stat-hint">ล่าสุด <%= formatDateTime(overview.lastMessageAt) %></div>
   </div>
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">กลุ่มที่บอทอยู่</div>
-    <div class="text-2xl font-bold mt-1"><%= formatNumber(overview.activeGroups) %></div>
-    <div class="text-[11px] text-slate-400 mt-1">กลุ่มที่ยัง active</div>
+  <div class="card stat">
+    <div class="stat-label">กลุ่มที่บอทอยู่</div>
+    <div class="stat-value"><%= formatNumber(overview.activeGroups) %></div>
+    <div class="stat-hint">กลุ่มที่ยัง active</div>
   </div>
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">งานค้างติดตาม</div>
-    <div class="text-2xl font-bold mt-1 text-amber-600"><%= formatNumber(overview.openTasks) %></div>
-    <div class="text-[11px] text-slate-400 mt-1">สถานะ open</div>
+  <div class="card stat">
+    <div class="stat-label">งานค้างติดตาม</div>
+    <div class="stat-value text-amber-600"><%= formatNumber(overview.openTasks) %></div>
+    <div class="stat-hint">สถานะ open</div>
   </div>
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">โควต้าข้อความคงเหลือ</div>
-    <div class="text-2xl font-bold mt-1">
+  <div class="card stat">
+    <div class="stat-label">โควต้าข้อความคงเหลือ</div>
+    <div class="stat-value">
       <% if (quota.limit === null) { %>-<% } else { %><%= formatNumber(quota.limit - (quota.used || 0)) %><% } %>
     </div>
-    <div class="text-[11px] text-slate-400 mt-1">
+    <div class="stat-hint">
       <% if (quota.mock) { %>ค่าจำลอง (โหมด MOCK)<% } else { %>ใช้ไป <%= formatNumber(quota.used) %> / <%= formatNumber(quota.limit) %><% } %>
     </div>
   </div>
@@ -39,22 +37,22 @@
 <!-- charts -->
 <div class="grid lg:grid-cols-3 gap-4">
   <div class="card p-5 lg:col-span-2">
-    <div class="text-sm font-semibold mb-3">จำนวนข้อความรายวัน (14 วันย้อนหลัง)</div>
+    <div class="card-title mb-3">จำนวนข้อความรายวัน (14 วันย้อนหลัง)</div>
     <canvas id="chartDaily" height="110"></canvas>
   </div>
   <div class="card p-5">
-    <div class="text-sm font-semibold mb-3">สัดส่วนชนิดข้อความ</div>
+    <div class="card-title mb-3">สัดส่วนชนิดข้อความ</div>
     <canvas id="chartTypes" height="180"></canvas>
   </div>
 </div>
 
 <div class="grid lg:grid-cols-3 gap-4">
   <div class="card p-5 lg:col-span-2">
-    <div class="text-sm font-semibold mb-3">ความคึกคักตามช่วงเวลา (30 วัน)</div>
+    <div class="card-title mb-3">ความคึกคักตามช่วงเวลา (30 วัน)</div>
     <canvas id="chartHourly" height="110"></canvas>
   </div>
   <div class="card p-5">
-    <div class="text-sm font-semibold mb-3">คนที่คุยมากที่สุด</div>
+    <div class="card-title mb-3">คนที่คุยมากที่สุด</div>
     <% if (talkers.length === 0) { %>
       <p class="text-sm text-slate-400">ยังไม่มีข้อมูล</p>
     <% } else { %>
@@ -80,7 +78,7 @@
 <div class="grid lg:grid-cols-2 gap-4">
   <div class="card p-5">
     <div class="flex items-center justify-between mb-3">
-      <div class="text-sm font-semibold">งานค้างล่าสุด</div>
+      <div class="card-title">งานค้างล่าสุด</div>
       <a href="/tasks<%= selectedGroup ? '?group=' + encodeURIComponent(selectedGroup) : '' %>" class="text-xs text-line font-medium">ดูทั้งหมด</a>
     </div>
     <% if (openTasks.length === 0) { %>
@@ -103,27 +101,27 @@
 
   <div class="card p-5">
     <div class="flex items-center justify-between mb-3">
-      <div class="text-sm font-semibold">การส่งข้อความล่าสุด</div>
+      <div class="card-title">การส่งข้อความล่าสุด</div>
       <a href="/logs" class="text-xs text-line font-medium">ดูทั้งหมด</a>
     </div>
     <% if (recentLogs.length === 0) { %>
       <p class="text-sm text-slate-400">ยังไม่มีการส่งข้อความออกจากระบบ</p>
     <% } else { %>
-      <div class="overflow-x-auto -mx-2">
-        <table class="w-full">
-          <tbody>
-            <% recentLogs.forEach(function (l) { %>
-              <tr>
-                <td class="text-xs text-slate-500 whitespace-nowrap"><%= formatDateTime(l.created_at) %></td>
-                <td class="text-xs"><%= l.target_name || l.target_id || l.target_type %></td>
-                <td class="text-xs truncate max-w-[200px]"><%= l.preview %></td>
-                <td>
-                  <span class="badge <%= l.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : l.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600' %>"><%= l.status %></span>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
+      <!--
+        ใช้รายการแทนตาราง: การ์ดนี้กว้างครึ่งจอ ถ้าใส่ตาราง 4 คอลัมน์
+        คอลัมน์สถานะจะถูกดันหลุดขอบจนต้องเลื่อนแนวนอนถึงจะเห็น
+      -->
+      <div>
+        <% recentLogs.forEach(function (l) { %>
+          <div class="log-row">
+            <div class="log-time"><%= formatDateTime(l.created_at) %></div>
+            <div class="log-main">
+              <div class="log-text" title="<%= l.preview %>"><%= l.preview %></div>
+              <div class="log-target"><%= l.target_name || l.target_id || l.target_type %></div>
+            </div>
+            <span class="badge shrink-0 <%= l.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : l.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600' %>"><%= l.status %></span>
+          </div>
+        <% }) %>
       </div>
     <% } %>
   </div>
@@ -161,13 +159,39 @@
   })
 
   if (types.length > 0) {
+    const typeTotal = types.reduce((s, t) => s + t.count, 0)
     new Chart(document.getElementById('chartTypes'), {
       type: 'doughnut',
       data: {
         labels: types.map(t => t.type),
-        datasets: [{ data: types.map(t => t.count), backgroundColor: ['#06C755', '#0C1628', '#D97706', '#C8281E', '#5072B8', '#8A94A6'] }]
+        datasets: [{
+          data: types.map(t => t.count),
+          backgroundColor: ['#06C755', '#0C1628', '#D97706', '#C8281E', '#5072B8', '#8A94A6'],
+          borderWidth: 0
+        }]
       },
-      options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+      options: {
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              usePointStyle: true,
+              pointStyle: 'circle',
+              font: { size: 12 },
+              // ต่อเปอร์เซ็นต์ท้ายชื่อชนิด ให้อ่านสัดส่วนได้โดยไม่ต้องเอาเมาส์ไปชี้
+              generateLabels: (chart) => chart.data.labels.map((label, i) => ({
+                text: `${label}  ${Math.round((chart.data.datasets[0].data[i] / typeTotal) * 100)}%`,
+                fillStyle: chart.data.datasets[0].backgroundColor[i],
+                strokeStyle: chart.data.datasets[0].backgroundColor[i],
+                index: i
+              }))
+            }
+          }
+        }
+      }
     })
   }
 </script>

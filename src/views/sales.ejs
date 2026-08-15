@@ -18,41 +18,41 @@
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">ยอดขายรวม</div>
-    <div class="text-2xl font-bold mt-1"><%= formatMoney(sales.totalAmount) %></div>
-    <div class="text-[11px] mt-1 <%= sales.changePct === null ? 'text-slate-400' : (sales.changePct >= 0 ? 'text-emerald-600' : 'text-red-600') %>">
+  <div class="card stat">
+    <div class="stat-label">ยอดขายรวม</div>
+    <div class="stat-value"><%= formatMoney(sales.totalAmount) %></div>
+    <div class="stat-hint <%= sales.changePct === null ? '' : (sales.changePct >= 0 ? 'text-emerald-600' : 'text-red-600') %>">
       <% if (sales.changePct === null) { %>ไม่มีข้อมูลเปรียบเทียบ
       <% } else { %><%= sales.changePct >= 0 ? '▲' : '▼' %> <%= Math.abs(sales.changePct).toFixed(1) %>% เทียบวันก่อน<% } %>
     </div>
   </div>
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">จำนวนบิล</div>
-    <div class="text-2xl font-bold mt-1"><%= formatNumber(sales.orderCount) %></div>
-    <div class="text-[11px] text-slate-400 mt-1">ไม่นับรายการที่ยกเลิก</div>
+  <div class="card stat">
+    <div class="stat-label">จำนวนบิล</div>
+    <div class="stat-value"><%= formatNumber(sales.orderCount) %></div>
+    <div class="stat-hint">ไม่นับรายการที่ยกเลิก</div>
   </div>
-  <div class="card p-4">
-    <div class="text-xs text-slate-500">ยอดเฉลี่ยต่อบิล</div>
-    <div class="text-2xl font-bold mt-1"><%= formatMoney(sales.avgOrder) %></div>
-    <div class="text-[11px] text-slate-400 mt-1">
+  <div class="card stat">
+    <div class="stat-label">ยอดเฉลี่ยต่อบิล</div>
+    <div class="stat-value"><%= formatMoney(sales.avgOrder) %></div>
+    <div class="stat-hint">
       <%= formatMoney(sales.totalAmount) %> ÷ <%= formatNumber(sales.orderCount) %> บิล
     </div>
   </div>
-  <div class="card p-4 <%= anomalies.length > 0 ? 'border-red-300 bg-red-50' : '' %>">
-    <div class="text-xs <%= anomalies.length > 0 ? 'text-red-600' : 'text-slate-500' %>">รายการผิดปกติ</div>
-    <div class="text-2xl font-bold mt-1 <%= anomalies.length > 0 ? 'text-red-600' : '' %>"><%= anomalies.length %></div>
-    <div class="text-[11px] text-slate-500 mt-1">ตรวจอัตโนมัติ 4 เกณฑ์</div>
+  <div class="card stat <%= anomalies.length > 0 ? 'border-red-300 bg-red-50' : '' %>">
+    <div class="stat-label <%= anomalies.length > 0 ? 'text-red-600' : '' %>">รายการผิดปกติ</div>
+    <div class="stat-value <%= anomalies.length > 0 ? 'text-red-600' : '' %>"><%= anomalies.length %></div>
+    <div class="stat-hint">ตรวจอัตโนมัติ 4 เกณฑ์</div>
   </div>
 </div>
 
 <div class="card p-5">
-  <div class="text-sm font-semibold mb-3">แนวโน้มยอดขาย 14 วัน</div>
+  <div class="card-title mb-3">แนวโน้มยอดขาย 14 วัน</div>
   <canvas id="chartSales" height="90"></canvas>
 </div>
 
 <% if (anomalies.length > 0) { %>
 <div class="card p-5 border-red-200">
-  <div class="text-sm font-semibold text-red-700 mb-3">รายการที่ควรตรวจสอบ (<%= anomalies.length %>)</div>
+  <div class="card-title text-red-700 mb-3">รายการที่ควรตรวจสอบ (<%= anomalies.length %>)</div>
   <ul class="space-y-2">
     <% anomalies.forEach(function (a) { %>
       <li class="text-sm bg-red-50 border border-red-100 rounded-lg px-3 py-2">
@@ -65,7 +65,7 @@
 <% } %>
 
 <div class="card p-5">
-  <div class="text-sm font-semibold mb-1">ส่งรายงานเข้ากลุ่มผู้บริหาร</div>
+  <div class="card-title mb-1">ส่งรายงานเข้ากลุ่มผู้บริหาร</div>
   <p class="text-xs text-slate-500 mb-3">
     ระบบจะประกอบเป็น Flex Message พร้อมส่วนแจ้งเตือนสีแดงเมื่อพบรายการผิดปกติ - แนะนำให้กด dry-run ตรวจก่อนส่งจริง
   </p>
@@ -94,7 +94,7 @@
 
 <div class="grid lg:grid-cols-3 gap-4">
   <div class="card overflow-hidden">
-    <div class="px-4 py-3 border-b border-slate-200 text-sm font-semibold">ยอดขายตามสาขา</div>
+    <div class="px-5 py-3.5 border-b border-slate-200 card-title">ยอดขายตามสาขา</div>
     <table class="w-full">
       <tbody>
         <% sales.branches.forEach(function (b) { %>
@@ -105,7 +105,7 @@
     </table>
   </div>
   <div class="card overflow-hidden">
-    <div class="px-4 py-3 border-b border-slate-200 text-sm font-semibold">ยอดขายตามช่องทาง</div>
+    <div class="px-5 py-3.5 border-b border-slate-200 card-title">ยอดขายตามช่องทาง</div>
     <table class="w-full">
       <tbody>
         <% sales.channels.forEach(function (c) { %>
@@ -116,7 +116,7 @@
     </table>
   </div>
   <div class="card overflow-hidden">
-    <div class="px-4 py-3 border-b border-slate-200 text-sm font-semibold">สินค้าขายดี 5 อันดับ</div>
+    <div class="px-5 py-3.5 border-b border-slate-200 card-title">สินค้าขายดี 5 อันดับ</div>
     <table class="w-full">
       <tbody>
         <% sales.topProducts.forEach(function (p) { %>

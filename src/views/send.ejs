@@ -10,7 +10,7 @@
 
 <div class="grid lg:grid-cols-2 gap-4">
   <form method="post" action="/send" class="card p-5 space-y-4">
-    <div class="text-sm font-semibold">ประกอบข้อความ</div>
+    <div class="card-title">ประกอบข้อความ</div>
 
     <div class="grid md:grid-cols-2 gap-3">
       <div>
@@ -118,7 +118,7 @@
   <div class="space-y-4">
     <% if (preview) { %>
       <div class="card p-5">
-        <div class="text-sm font-semibold mb-2">ตัวอย่างข้อความที่จะส่ง</div>
+        <div class="card-title mb-2">ตัวอย่างข้อความที่จะส่ง</div>
         <% if (preview.kind === 'text') { %>
           <div class="bg-slate-100 rounded-xl p-4 text-sm whitespace-pre-wrap"><%= preview.text %></div>
         <% } else { %>
@@ -132,27 +132,23 @@
     <% } %>
 
     <div class="card overflow-hidden">
-      <div class="px-4 py-3 border-b border-slate-200 text-sm font-semibold">ประวัติการส่งล่าสุด</div>
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead><tr><th>เวลา</th><th>ปลายทาง</th><th>ข้อความ</th><th>สถานะ</th></tr></thead>
-          <tbody>
-            <% if (logs.length === 0) { %>
-              <tr><td colspan="4" class="text-center text-slate-400 py-6">ยังไม่มีประวัติ</td></tr>
-            <% } %>
-            <% logs.forEach(function (l) { %>
-              <tr>
-                <td class="text-xs text-slate-500 whitespace-nowrap"><%= formatDateTime(l.created_at) %></td>
-                <td class="text-xs"><%= l.target_name || l.target_id || l.target_type %></td>
-                <td class="text-xs max-w-[220px] truncate"><%= l.preview %></td>
-                <td>
-                  <span class="badge <%= l.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : l.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600' %>"><%= l.status %></span>
-                  <% if (l.error) { %><div class="text-[10px] text-red-500 mt-1"><%= l.error %></div><% } %>
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
-        </table>
+      <div class="px-5 py-3.5 border-b border-slate-200 card-title">ประวัติการส่งล่าสุด</div>
+      <!-- รายการแทนตาราง ด้วยเหตุผลเดียวกับการ์ด "การส่งข้อความล่าสุด" ในหน้าภาพรวม -->
+      <div class="px-5 py-1">
+        <% if (logs.length === 0) { %>
+          <p class="text-center text-slate-400 py-6 text-sm">ยังไม่มีประวัติ</p>
+        <% } %>
+        <% logs.forEach(function (l) { %>
+          <div class="log-row">
+            <div class="log-time"><%= formatDateTime(l.created_at) %></div>
+            <div class="log-main">
+              <div class="log-text" title="<%= l.preview %>"><%= l.preview %></div>
+              <div class="log-target"><%= l.target_name || l.target_id || l.target_type %></div>
+              <% if (l.error) { %><div class="text-[10px] text-red-500 mt-1"><%= l.error %></div><% } %>
+            </div>
+            <span class="badge shrink-0 <%= l.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : l.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600' %>"><%= l.status %></span>
+          </div>
+        <% }) %>
       </div>
     </div>
   </div>
