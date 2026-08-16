@@ -43,7 +43,32 @@ services:
         value: 0 8 * * *
       - key: PG_POOL_MAX
         value: "5"
+      # ---- เก็บไฟล์จากไลน์กลุ่มขึ้น Cloudflare R2 (Workshop 6) ----
+      # ต้องเป็น s3 เท่านั้น เพราะดิสก์ของ Render เป็นแบบ ephemeral
+      # ไฟล์ที่เขียนลงดิสก์จะหายทุกครั้งที่ deploy ใหม่
+      # ถ้าไม่เก็บไฟล์เลย ตั้ง MEDIA_ARCHIVE_ENABLED เป็น "false" แล้วข้าม S3_* ทั้งหมด
+      - key: MEDIA_ARCHIVE_ENABLED
+        value: "true"
+      - key: MEDIA_STORAGE_DRIVER
+        value: s3
+      - key: MEDIA_MAX_SIZE_MB
+        value: "25"
+      - key: MEDIA_TYPES
+        value: image,video,audio,file
+      - key: MEDIA_SAVE_PREVIEW
+        value: "true"
+      - key: S3_BUCKET
+        value: line-workflow-media
+      - key: S3_REGION
+        value: auto
       # ค่าด้านล่างต้องกรอกในหน้า Render เอง (sync: false = ไม่เก็บลง git)
+      # S3_ENDPOINT ก็ปิดไว้ด้วย เพราะมี account id ของ Cloudflare อยู่ในนั้น
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: CHANNEL_ACCESS_TOKEN

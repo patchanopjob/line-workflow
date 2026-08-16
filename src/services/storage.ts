@@ -1,6 +1,14 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command
+} from '@aws-sdk/client-s3'
 import { config } from '../config'
 
 // ---------------------------------------------------------------------------
@@ -104,82 +112,94 @@ class LocalDiskStorage implements Storage {
 }
 
 // ---------------------------------------------------------------------------
-// เก็บขึ้น object storage (S3 / Cloudflare R2 / MinIO)
+// เก็บขึ้น object storage ที่รองรับ S3 API (Cloudflare R2 / AWS S3 / MinIO)
 //
-// วิธีเปิดใช้งาน
-//   1) npm install @aws-sdk/client-s3
-//   2) ตั้งค่าใน .env
-//        MEDIA_STORAGE_DRIVER=s3
-//        S3_BUCKET=line-media
-//        S3_REGION=auto
-//        S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com   (R2)
-//        S3_ACCESS_KEY_ID=...
-//        S3_SECRET_ACCESS_KEY=...
-//   3) เอา comment ของโค้ดข้างล่างออก
+// R2 พูดภาษา S3 API ได้ครบ จึงใช้ @aws-sdk/client-s3 ตัวเดียวกับ AWS ได้เลย
+// ไม่ต้องมี SDK ของ Cloudflare แยก ต่างกันแค่ 2 จุดคือ
+//   1) ต้องระบุ endpoint ของบัญชีตัวเอง (https://<account_id>.r2.cloudflarestorage.com)
+//   2) region ต้องเป็น 'auto' เพราะ R2 ไม่ได้ใช้ค่านี้ แต่ SDK บังคับให้มี
 //
-// ตั้งใจไม่ใส่ @aws-sdk/client-s3 เป็น dependency ตั้งแต่ต้น เพราะผู้เรียนส่วนใหญ่
-// ใช้ดิสก์ในเครื่องก็พอ ไม่ต้องโหลด package เพิ่มโดยไม่จำเป็น
+// วิธีเปิดใช้งาน: ตั้งค่าใน .env หัวข้อที่ 7 แล้วเปลี่ยน MEDIA_STORAGE_DRIVER เป็น s3
+// ตรวจว่าต่อติดจริงด้วย  npm run storage:check
 // ---------------------------------------------------------------------------
 class S3Storage implements Storage {
   readonly driver = 's3' as const
+  private client: S3Client
+  private bucket: string
 
   constructor() {
-    if (!config.media.s3.bucket) {
+    const s3 = config.media.s3
+    // ตรวจค่าที่ขาดตั้งแต่ตอนสร้าง จะได้รู้สาเหตุทันทีแทนที่จะไปพังตอนอัปโหลดไฟล์จริง
+    if (!s3.bucket) {
       throw new Error('ตั้ง MEDIA_STORAGE_DRIVER=s3 แล้วแต่ยังไม่ได้ใส่ S3_BUCKET ใน .env')
     }
-    throw new Error(
-      'ยังไม่ได้เปิดใช้งาน S3 driver: ติดตั้ง @aws-sdk/client-s3 แล้วเปิดโค้ดใน src/services/storage.ts ตามคอมเมนต์'
-    )
+    if (!s3.accessKeyId || !s3.secretAccessKey) {
+      throw new Error(
+        'ตั้ง MEDIA_STORAGE_DRIVER=s3 แล้วแต่ยังไม่ได้ใส่ S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY ใน .env'
+      )
+    }
+
+    this.bucket = s3.bucket
+    this.client = new S3Client({
+      region: s3.region || 'auto',
+      // ว่างไว้ = ใช้ AWS S3 จริง / ใส่ = Cloudflare R2 หรือ MinIO
+      endpoint: s3.endpoint || undefined,
+      credentials: {
+        accessKeyId: s3.accessKeyId,
+        secretAccessKey: s3.secretAccessKey
+      },
+      // SDK รุ่นใหม่แนบ checksum header มาให้ทุก request ซึ่งบริการที่เข้ากันได้กับ S3
+      // บางเจ้ายังไม่รองรับ ตั้งเป็น WHEN_REQUIRED เพื่อความเข้ากันได้สูงสุด
+      // ความถูกต้องของข้อมูลยังตรวจได้อยู่ เพราะเราเก็บ sha256 ของทุกไฟล์ไว้ในฐานข้อมูลเอง
+      requestChecksumCalculation: 'WHEN_REQUIRED'
+    })
   }
 
-  /* ตัวอย่างการเขียนจริงเมื่อติดตั้ง @aws-sdk/client-s3 แล้ว
-
-  private client = new S3Client({
-    region: config.media.s3.region,
-    endpoint: config.media.s3.endpoint || undefined,
-    credentials: {
-      accessKeyId: config.media.s3.accessKeyId,
-      secretAccessKey: config.media.s3.secretAccessKey
-    }
-  })
-
   async put(key: string, data: Buffer): Promise<PutResult> {
-    await this.client.send(new PutObjectCommand({
-      Bucket: config.media.s3.bucket, Key: key, Body: data
-    }))
+    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: data }))
     return { key, size: data.length, checksum: sha256(data) }
   }
 
   async get(key: string): Promise<Buffer> {
-    const res = await this.client.send(new GetObjectCommand({
-      Bucket: config.media.s3.bucket, Key: key
-    }))
+    const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }))
+    if (!res.Body) throw new Error(`อ่านไฟล์จาก object storage ไม่ได้: ${key}`)
+    // Body ฝั่ง Node เป็น stream ที่ SDK v3 ต่อ helper แปลงเป็น byte array ไว้ให้แล้ว
     return Buffer.from(await res.Body.transformToByteArray())
   }
 
   async delete(key: string): Promise<void> {
-    await this.client.send(new DeleteObjectCommand({
-      Bucket: config.media.s3.bucket, Key: key
-    }))
+    await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }))
   }
 
-  */
+  async exists(key: string): Promise<boolean> {
+    try {
+      await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }))
+      return true
+    } catch {
+      return false
+    }
+  }
 
-  async put(): Promise<PutResult> {
-    throw new Error('S3 driver ยังไม่เปิดใช้งาน')
-  }
-  async get(): Promise<Buffer> {
-    throw new Error('S3 driver ยังไม่เปิดใช้งาน')
-  }
-  async delete(): Promise<void> {
-    throw new Error('S3 driver ยังไม่เปิดใช้งาน')
-  }
-  async exists(): Promise<boolean> {
-    return false
-  }
   async usage(): Promise<{ files: number; bytes: number }> {
-    // object storage นับขนาดรวมจากฐานข้อมูลแทน (ดู services/media.ts)
-    return { files: 0, bytes: 0 }
+    // ไล่ list ทีละหน้า (สูงสุด 1000 key ต่อครั้ง) จนครบทั้ง bucket
+    // นี่คือ operation แบบ Class A ถ้าไฟล์เยอะมากและมีคนเปิดหน้าแกลเลอรีบ่อย
+    // ให้เปลี่ยนไปอ่านผลรวมจากคอลัมน์ size_bytes ในตาราง media_files แทน
+    let files = 0
+    let bytes = 0
+    let token: string | undefined
+
+    do {
+      const res = await this.client.send(
+        new ListObjectsV2Command({ Bucket: this.bucket, ContinuationToken: token })
+      )
+      for (const obj of res.Contents ?? []) {
+        files += 1
+        bytes += obj.Size ?? 0
+      }
+      token = res.IsTruncated ? res.NextContinuationToken : undefined
+    } while (token)
+
+    return { files, bytes }
   }
 }
 

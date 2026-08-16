@@ -20,10 +20,13 @@
     "daily-summary": "tsx scripts/daily-summary.ts",
     "daily-report": "tsx scripts/daily-report.ts",
     "seed:media": "tsx scripts/seed-media.ts",
-    "media:cleanup": "tsx scripts/media-cleanup.ts"
+    "media:cleanup": "tsx scripts/media-cleanup.ts",
+    "media:migrate": "tsx scripts/media-migrate-s3.ts",
+    "storage:check": "tsx scripts/storage-check.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
+    "@aws-sdk/client-s3": "^3.1111.0",
     "@line/bot-sdk": "^10.4.0",
     "bcryptjs": "^3.0.2",
     "connect-pg-simple": "^10.0.0",
