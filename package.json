@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-views.mjs",
     "start": "node dist/src/index.js",
     "typecheck": "tsc --noEmit",
     "db:setup": "tsx scripts/db-setup.ts",
